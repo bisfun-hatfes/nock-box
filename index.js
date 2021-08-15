@@ -76,6 +76,8 @@ function nock(subject, formula) {
       return slot(subject, formula)
     case 1:
       return constant(subject, formula)
+    case 2:
+      return evaluate(subject, formula)
     case 3:
       return cell(subject, formula)
     case 4:
@@ -121,6 +123,15 @@ function slot(subject, formula) {
 function constant(subject, formula) {
   let [_, val] = formula
   return val
+}
+
+// nock 2
+function evaluate(subject, formula) {
+  let [subFormulaA, subFormulaB] = formula[1]
+  let newSubject = nock(subject, subFormulaA)
+  let newFormula = nock(subject, subFormulaB)
+
+  return nock(newSubject, newFormula)
 }
 
 // nock 3
