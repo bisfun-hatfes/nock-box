@@ -1,6 +1,8 @@
 import readline from 'readline'
 import equal from 'deep-equal'
 
+const DEBUG_MODE = process.argv && ['-d', '--debug'].includes(process.argv[2])
+
 let reader = readline.createInterface({
   input: process.stdin,
   output: process.stdout
@@ -18,7 +20,7 @@ async function run() {
       let input = await getInput()
       keepGoing = inputHandler(input)
     } catch (err) {
-      console.error(err)
+      logError(err)
     }
   }
 }
@@ -35,8 +37,15 @@ function inputHandler(input) {
   if (['exit', '|exit'].includes(input.trim()))
     return false
 
-  let structured = merge(parseInput(input))
-  if (structured.length === 2) {
+  let parsed = parseInput(input)
+  if (parsed.length === 0) {
+    toss('Invalid nock.')
+  } else if (parsed.length === 1) {
+    toss('Logical bottom.')
+  }
+
+  let parsedAndMerged = merge(parsed)
+  if (parsedAndMerged.length === 2) {
     let subject = structured[0]
     let formula = structured[1]
 
@@ -48,8 +57,6 @@ function inputHandler(input) {
 
 function parseInput(input) {
   let preProcessed = input.trim()
-  if (preProcessed[0] !== '[')
-    preProcessed = `[${preProcessed}]`
   try {
     return JSON.parse(preProcessed
     .split('.').join('')
@@ -58,7 +65,7 @@ function parseInput(input) {
     .split(' ]').join(']')
     .split(' ').join(','))
   } catch {
-    throw new Error('Invalid nock.')
+    toss('Invalid nock.')
   }
 }
 
@@ -73,7 +80,7 @@ function merge(data) {
 
 function nock(subject, formula) {
   if (!formula)
-    throw new Error(`Invalid formula: ${formula}`)
+    toss(`Invalid formula: ${formula}`)
   let op = formula[0]
   if (typeof op !== 'number')
     return [nock(subject, formula[0]), nock(subject, formula[1])]
@@ -103,10 +110,11 @@ function nock(subject, formula) {
       case 11:
         return hint(subject, formula)
       default:
-        throw new Error(`Invalid nock op: ${op}`)
+        toss(`Invalid nock op: ${op}`)
     }
-  } catch {
-    throw new Error(`Poorly formed nock ${op} formula`)
+  } catch (err) {
+    if (err.inApp === true) throw err
+    toss(`Poorly formed nock ${op} formula`)
   }
 }
 
@@ -117,7 +125,7 @@ function slot(subject, formula) {
 
   function grabSlot(subject, slot) {
     if (slot <= 0) {
-      throw new Error('Invalid slot.')
+      toss('Invalid slot.')
     }
 
     if (slot === 1)
@@ -133,7 +141,7 @@ function slot(subject, formula) {
         2 + (slot % 2)
       )
     } catch {
-      throw new Error('Invalid slot.')
+      toss('Invalid slot.')
     }
   }
 }
@@ -165,14 +173,13 @@ function increment(subject, formula) {
   let [_, subFormula] = formula
   let val = nock(subject, subFormula)
   if (typeof val !== 'number')
-    throw new Error('Cannot increment cell.')
+    toss('Cannot increment cell.')
   return val + 1
 }
 
 // nock 5
 function equality(subject, formula) {
-  let [_, formulas] = formula
-  let [subFormulaA, subFormulaB] = formulas
+  let [subFormulaA, subFormulaB] = formula[1]
   let a = nock(subject, subFormulaA)
   let b = nock(subject, subFormulaB)
   return equal(a, b) ? 0 : 1
@@ -216,4 +223,16 @@ function hint(subject, formula) {
   let [hint, subFormula] = formula[1]
   // something something, hint optimization
   return nock(subject, subFormula)
+}
+
+// util
+function toss(message) {
+  let err = new Error(message)
+  err.inApp = true
+
+  throw err
+}
+
+function logError(err) {
+  console.error(DEBUG_MODE ? err : err.message)
 }
