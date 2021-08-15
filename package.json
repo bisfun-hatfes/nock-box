@@ -4,5 +4,8 @@
   "description": "Basic JS Nock interpreter",
   "main": "index.js",
   "license": "MIT",
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "deep-equal": "^2.0.5"
+  }
 }

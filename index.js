@@ -1,4 +1,5 @@
 import readline from 'readline'
+import equal from 'deep-equal'
 
 let reader = readline.createInterface({
   input: process.stdin,
@@ -79,6 +80,8 @@ function nock(subject, formula) {
       return cell(subject, formula)
     case 4:
       return increment(subject, formula)
+    case 5:
+      return equality(subject, formula)
     default:
       return
   }
@@ -130,4 +133,13 @@ function increment(subject, formula) {
   let [_, subFormula] = formula
   let val = nock(subject, subFormula)
   return val + 1
+}
+
+// nock 5
+function equality(subject, formula) {
+  let [_, formulas] = formula
+  let [subFormulaA, subFormulaB] = formulas
+  let a = nock(subject, subFormulaA)
+  let b = nock(subject, subFormulaB)
+  return equal(a, b) ? 0 : 1
 }
