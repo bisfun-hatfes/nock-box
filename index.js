@@ -86,6 +86,8 @@ function nock(subject, formula) {
       return equality(subject, formula)
     case 6:
       return condition(subject, formula)
+    case 7:
+      return compose(subject, formula)
     default:
       return
   }
@@ -165,4 +167,12 @@ function condition(subject, formula) {
   return nock(subject, conditionFormula) === 0
     ? nock(subject, subFormulaA)
     : nock(subject, subFormulaB)
+}
+
+// nock 7
+function compose(subject, formula) {
+  let [subFormulaA, subFormulaB] = formula[1]
+  let newSubject = nock(subject, subFormulaA)
+
+  return nock(newSubject, subFormulaB)
 }
