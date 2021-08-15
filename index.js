@@ -47,8 +47,11 @@ function inputHandler(input) {
 }
 
 function parseInput(input) {
+  let preProcessed = input.trim()
+  if (preProcessed[0] !== '[')
+    preProcessed = `[${preProcessed}]`
   try {
-    return JSON.parse(input
+    return JSON.parse(preProcessed
     .split('.').join('')
     .split(/  +/g).join(' ')
     .split('[ ').join('[')
@@ -213,5 +216,4 @@ function hint(subject, formula) {
   let [hint, subFormula] = formula[1]
   // something something, hint optimization
   return nock(subject, subFormula)
-
 }
