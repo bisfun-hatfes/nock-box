@@ -82,6 +82,7 @@ function nock(subject, formula) {
   }
 }
 
+// nock 0
 function slot(subject, formula) {
   let [_, slot] = formula
   return grabSlot(subject, slot)
@@ -109,4 +110,10 @@ function slot(subject, formula) {
       throw new Error('Invalid slot.')
     }
   }
+}
+
+// nock 1
+function constant(subject, formula) {
+  let [_, val] = formula
+  return val
 }
