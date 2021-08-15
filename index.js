@@ -77,6 +77,8 @@ function nock(subject, formula) {
       return constant(subject, formula)
     case 3:
       return cell(subject, formula)
+    case 4:
+      return increment(subject, formula)
     default:
       return
   }
@@ -88,8 +90,6 @@ function slot(subject, formula) {
   return grabSlot(subject, slot)
 
   function grabSlot(subject, slot) {
-    console.log(slot)
-    console.log(subject)
     if (slot <= 0) {
       throw new Error('Invalid slot.')
     }
@@ -120,7 +120,14 @@ function constant(subject, formula) {
 
 // nock 3
 function cell(subject, formula) {
-  let [_, testFormula] = formula
-  let val = nock(subject, testFormula)
+  let [_, subFormula] = formula
+  let val = nock(subject, subFormula)
   return typeof val === 'number' ? 1 : 0
+}
+
+// nock 4
+function increment(subject, formula) {
+  let [_, subFormula] = formula
+  let val = nock(subject, subFormula)
+  return val + 1
 }
