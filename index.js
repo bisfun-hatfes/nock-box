@@ -1,5 +1,3 @@
-import { constants } from 'buffer'
-import { O_NONBLOCK } from 'constants'
 import readline from 'readline'
 
 let reader = readline.createInterface({
@@ -77,6 +75,8 @@ function nock(subject, formula) {
       return slot(subject, formula)
     case 1:
       return constant(subject, formula)
+    case 3:
+      return cell(subject, formula)
     default:
       return
   }
@@ -116,4 +116,11 @@ function slot(subject, formula) {
 function constant(subject, formula) {
   let [_, val] = formula
   return val
+}
+
+// nock 3
+function cell(subject, formula) {
+  let [_, testFormula] = formula
+  let val = nock(subject, testFormula)
+  return typeof val === 'number' ? 1 : 0
 }
