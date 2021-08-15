@@ -1,3 +1,4 @@
+import { constants } from 'buffer'
 import { O_NONBLOCK } from 'constants'
 import readline from 'readline'
 
@@ -27,7 +28,7 @@ function getInput() {
     })
   })
 }
-
+ 
 function inputHandler(input) {
   if (['exit', '|exit'].includes(input.trim()))
     return false
@@ -36,9 +37,14 @@ function inputHandler(input) {
   if (structured.length === 2) {
     let subject = structured[0]
     let formula = structured[1]
-    nock(subect, formula)
+    // console.log('Subject:')
+    // console.log(subject)
+    // console.log('Formula:')
+    // console.log(formula)
+    // console.log(structured)
+    let result = nock(subject, formula)
+    console.log(result)
   }
-  console.log(structured)
   return true
 }
 
@@ -51,7 +57,7 @@ function parseInput(input) {
     .split(' ]').join(']')
     .split(' ').join(','))
   } catch {
-    console.error('Invalid nock.')
+    throw new Error('Invalid nock.')
   }
 }
 
@@ -68,10 +74,39 @@ function nock(subject, formula) {
   let op = formula[0]
   switch(op) {
     case 0:
-      slot(subject, formula)
+      return slot(subject, formula)
+    case 1:
+      return constant(subject, formula)
+    default:
+      return
   }
 }
 
 function slot(subject, formula) {
+  let [_, slot] = formula
+  return grabSlot(subject, slot)
 
+  function grabSlot(subject, slot) {
+    console.log(slot)
+    console.log(subject)
+    if (slot <= 0) {
+      throw new Error('Invalid slot.')
+    }
+
+    if (slot === 1)
+      return subject
+    if (slot === 2)
+      return subject[0]
+    if (slot === 3)
+      return subject[1]
+
+    try {
+      return grabSlot(
+        grabSlot(subject, Math.round(slot / 2)),
+        2 + (slot % 2)
+      )
+    } catch {
+      throw new Error('Invalid slot.')
+    }
+  }
 }
