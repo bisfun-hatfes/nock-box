@@ -8,16 +8,19 @@ let reader = readline.createInterface({
 
 run()
   .catch(console.error)
+  .finally(reader.close.bind(reader))
 
 async function run() {
   console.log('Nock Box 1.0.0 — A minimalist interpreter.')
   let keepGoing = true
   while (keepGoing) {
-    let input = await getInput()
-    keepGoing = inputHandler(input)
+    try {
+      let input = await getInput()
+      keepGoing = inputHandler(input)
+    } catch (err) {
+      console.error(err)
+    }
   }
-
-  reader.close()
 }
 
 function getInput() {
@@ -36,11 +39,7 @@ function inputHandler(input) {
   if (structured.length === 2) {
     let subject = structured[0]
     let formula = structured[1]
-    // console.log('Subject:')
-    // console.log(subject)
-    // console.log('Formula:')
-    // console.log(formula)
-    // console.log(structured)
+
     let result = nock(subject, formula)
     console.log(result)
   }
@@ -71,6 +70,9 @@ function merge(data) {
 
 function nock(subject, formula) {
   let op = formula[0]
+  if (typeof op !== 'number')
+    return [nock(subject, formula[0]), nock(subject, formula[1])]
+
   switch(op) {
     case 0:
       return slot(subject, formula)
@@ -90,6 +92,8 @@ function nock(subject, formula) {
       return compose(subject, formula)
     case 8:
       return extend(subject, formula)
+    case 9:
+      return invoke(subject, formula)
     default:
       return
   }
@@ -149,6 +153,8 @@ function cell(subject, formula) {
 function increment(subject, formula) {
   let [_, subFormula] = formula
   let val = nock(subject, subFormula)
+  if (typeof val !== 'number')
+    throw new Error('Cannot increment cell.')
   return val + 1
 }
 
@@ -184,4 +190,12 @@ function extend(subject, formula) {
   let val = nock(subject, subFormulaA)
   let newSubject = [val, subject]
   return nock(newSubject, subFormulaB)
+}
+
+// nock 9
+function invoke(subject, formula) {
+  let [newFormulaSlot, subFormula] = formula[1]
+  let newSubject = nock(subject, subFormula)
+  let newFormula = nock(newSubject, [0, newFormulaSlot])
+  return nock(newSubject, newFormula)
 }
