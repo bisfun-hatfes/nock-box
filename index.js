@@ -69,33 +69,41 @@ function merge(data) {
 }
 
 function nock(subject, formula) {
+  if (!formula)
+    throw new Error(`Invalid formula: ${formula}`)
   let op = formula[0]
   if (typeof op !== 'number')
     return [nock(subject, formula[0]), nock(subject, formula[1])]
 
-  switch(op) {
-    case 0:
-      return slot(subject, formula)
-    case 1:
-      return constant(subject, formula)
-    case 2:
-      return evaluate(subject, formula)
-    case 3:
-      return cell(subject, formula)
-    case 4:
-      return increment(subject, formula)
-    case 5:
-      return equality(subject, formula)
-    case 6:
-      return condition(subject, formula)
-    case 7:
-      return compose(subject, formula)
-    case 8:
-      return extend(subject, formula)
-    case 9:
-      return invoke(subject, formula)
-    default:
-      return
+  try {
+    switch(op) {
+      case 0:
+        return slot(subject, formula)
+      case 1:
+        return constant(subject, formula)
+      case 2:
+        return evaluate(subject, formula)
+      case 3:
+        return cell(subject, formula)
+      case 4:
+        return increment(subject, formula)
+      case 5:
+        return equality(subject, formula)
+      case 6:
+        return condition(subject, formula)
+      case 7:
+        return compose(subject, formula)
+      case 8:
+        return extend(subject, formula)
+      case 9:
+        return invoke(subject, formula)
+      case 11:
+        return hint(subject, formula)
+      default:
+        throw new Error(`Invalid nock op: ${op}`)
+    }
+  } catch {
+    throw new Error(`Poorly formed nock ${op} formula`)
   }
 }
 
@@ -198,4 +206,12 @@ function invoke(subject, formula) {
   let newSubject = nock(subject, subFormula)
   let newFormula = nock(newSubject, [0, newFormulaSlot])
   return nock(newSubject, newFormula)
+}
+
+// nock 11
+function hint(subject, formula) {
+  let [hint, subFormula] = formula[1]
+  // something something, hint optimization
+  return nock(subject, subFormula)
+
 }
