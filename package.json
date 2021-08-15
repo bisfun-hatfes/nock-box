@@ -1,0 +1,8 @@
+{
+  "name": "nock-box",
+  "version": "1.0.0",
+  "description": "Basic JS Nock interpreter",
+  "main": "index.js",
+  "license": "MIT",
+  "type": "module"
+}
