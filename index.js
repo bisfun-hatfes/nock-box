@@ -46,8 +46,8 @@ function inputHandler(input) {
 
   let parsedAndMerged = merge(parsed)
   if (parsedAndMerged.length === 2) {
-    let subject = structured[0]
-    let formula = structured[1]
+    let subject = parsedAndMerged[0]
+    let formula = parsedAndMerged[1]
 
     let result = nock(subject, formula)
     console.log(result)
@@ -56,14 +56,21 @@ function inputHandler(input) {
 }
 
 function parseInput(input) {
-  let preProcessed = input.trim()
+  // TODO formalize parsing once I grok the spec. Tis a hack for now
   try {
-    return JSON.parse(preProcessed
+    let preProcessed = input
+    .trim()
     .split('.').join('')
     .split(/  +/g).join(' ')
     .split('[ ').join('[')
     .split(' ]').join(']')
-    .split(' ').join(','))
+    .split(' ').join(',')
+
+    try {
+      return JSON.parse(preProcessed)
+    } catch {
+      return JSON.parse(`[${preProcessed}]`)
+    }
   } catch {
     toss('Invalid nock.')
   }
