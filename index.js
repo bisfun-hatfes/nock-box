@@ -88,6 +88,8 @@ function nock(subject, formula) {
       return condition(subject, formula)
     case 7:
       return compose(subject, formula)
+    case 8:
+      return extend(subject, formula)
     default:
       return
   }
@@ -173,6 +175,13 @@ function condition(subject, formula) {
 function compose(subject, formula) {
   let [subFormulaA, subFormulaB] = formula[1]
   let newSubject = nock(subject, subFormulaA)
+  return nock(newSubject, subFormulaB)
+}
 
+// nock 8
+function extend(subject, formula) {
+  let [subFormulaA, subFormulaB] = formula[1]
+  let val = nock(subject, subFormulaA)
+  let newSubject = [val, subject]
   return nock(newSubject, subFormulaB)
 }
