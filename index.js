@@ -65,7 +65,7 @@ function parseInput(input) {
     .split('[ ').join('[')
     .split(' ]').join(']')
     .split(' ').join(',')
-
+    .split('][').join('],[')
     try {
       return JSON.parse(preProcessed)
     } catch {
@@ -87,10 +87,12 @@ function merge(data) {
 
 function nock(subject, formula) {
   if (!formula)
-    toss(`Invalid formula: ${formula}`)
+    toss(`Invalid formula: ${formula}.`)
   let op = formula[0]
   if (typeof op !== 'number')
     return [nock(subject, formula[0]), nock(subject, formula[1])]
+
+  nockTrace(op, subject, formula)
 
   try {
     switch(op) {
@@ -117,11 +119,11 @@ function nock(subject, formula) {
       case 11:
         return hint(subject, formula)
       default:
-        toss(`Invalid nock op: ${op}`)
+        toss(`Invalid nock op: ${op}.`)
     }
   } catch (err) {
     if (err.inApp === true) throw err
-    toss(`Poorly formed nock ${op} formula`)
+    toss(`Poorly formed nock ${op} formula.`)
   }
 }
 
@@ -131,23 +133,22 @@ function slot(subject, formula) {
   return grabSlot(subject, slot)
 
   function grabSlot(subject, slot) {
-    if (slot <= 0) {
-      toss('Invalid slot.')
-    }
+    let isArray = Array.isArray(subject)
+    let has2Slot = isArray && subject.length >= 1
+    let has3Slot = isArray && subject.length >= 2
 
-    if (slot === 1)
+    if (slot == 1 && subject) {
       return subject
-    if (slot === 2)
+    } else if (slot == 2 && has2Slot) {
       return subject[0]
-    if (slot === 3)
+    } else if (slot === 3 && has3Slot) {
       return subject[1]
-
-    try {
+    } else if (slot > 3) {
       return grabSlot(
-        grabSlot(subject, Math.round(slot / 2)),
+        grabSlot(subject, Math.trunc(slot / 2)),
         2 + (slot % 2)
-      )
-    } catch {
+      ) 
+    } else {
       toss('Invalid slot.')
     }
   }
@@ -242,4 +243,13 @@ function toss(message) {
 
 function logError(err) {
   console.error(DEBUG_MODE ? err : err.message)
+}
+
+function nockTrace(op, subject, formula) {
+  if (DEBUG_MODE) {
+    console.log(`Nock ${op}:`)
+    console.log(`\tSubject: ${JSON.stringify(subject)}`)
+    console.log(`\tFormula: ${JSON.stringify(formula)}`)
+    console.log(`--------------------`)
+  }
 }
