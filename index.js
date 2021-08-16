@@ -37,21 +37,10 @@ function inputHandler(input) {
   if (['exit', '|exit'].includes(input.trim()))
     return false
 
-  let parsed = parseInput(input)
-  if (parsed.length === 0) {
-    toss('Invalid nock.')
-  } else if (parsed.length === 1) {
-    toss('Logical bottom.')
-  }
+  let [subject, formula] = parseInput(input)
+  let result = nock(subject, formula)
 
-  let parsedAndMerged = merge(parsed)
-  if (parsedAndMerged.length === 2) {
-    let subject = parsedAndMerged[0]
-    let formula = parsedAndMerged[1]
-
-    let result = nock(subject, formula)
-    console.log(result)
-  }
+  console.log(result)
   return true
 }
 
@@ -66,33 +55,47 @@ function parseInput(input) {
     .split(' ]').join(']')
     .split(' ').join(',')
     .split('][').join('],[')
+
+    let parsed
     try {
-      return JSON.parse(preProcessed)
+      parsed = JSON.parse(preProcessed)
     } catch {
-      return JSON.parse(`[${preProcessed}]`)
+      parsed = JSON.parse(`[${preProcessed}]`)
     }
+    if (!Array.isArray(parsed) || parsed.length === 0)
+      toss('Invalid nock.')
+
+    let parsedAndMerged = mergeRight(parsed)
+    if (!Array.isArray(parsedAndMerged) || parsedAndMerged.length <= 1)
+      toss('Invalid nock.')
+
+    if(!Array.isArray(parsedAndMerged[1]) || parsedAndMerged.length < 2)
+      toss(`Invalid nock: bad formula: ${parsedAndMerged[1]}`)
+
+    return parsedAndMerged
   } catch {
     toss('Invalid nock.')
   }
 }
 
-function merge(data) {
+function mergeRight(data) {
   if (!Array.isArray(data))
     return data
   if (data.length === 1)
-    return merge(data[0])
+    return mergeRight(data[0])
   
-  return [merge(data[0]), merge(data.slice(1))]
+  return [mergeRight(data[0]), mergeRight(data.slice(1))]
 }
 
 function nock(subject, formula) {
   if (!formula)
-    toss(`Invalid formula: ${formula}.`)
+    toss('Invalid nock: missing formula.')
+
   let op = formula[0]
   if (typeof op !== 'number')
     return [nock(subject, formula[0]), nock(subject, formula[1])]
 
-  nockTrace(op, subject, formula)
+  nockTrace(op, subject, formula) // debug logging
 
   try {
     switch(op) {
